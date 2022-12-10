@@ -47,25 +47,27 @@ def create_view(metric: Metric, interval, property):
     metric_type = metric.metric_type
     metric_aggregation = metric.usage_aggregation_type
     metric_name = metric.billable_metric_name
+    metric_property = metric.billable_metric_property
 
     if metric_type == "counter":
 
         if metric_aggregation == "sum":
             query_name = QUERY_BUILDER_NAME.COUNTER_SUM
-        elif metric_aggregation == "count":
-            query_name = QUERY_BUILDER_NAME.COUNTER_COUNT
-        elif metric_aggregation == "unique":
-            query_name = QUERY_BUILDER_NAME.COUNTER_UNIQUE
-        elif metric_aggregation == "max":
-            query_name = QUERY_BUILDER_NAME.COUNTER_MAX
+            run_query(query_name, metric_name)
 
-        bucket_size = QUERY_BUCKET_SIZE.COUNTER
+        else:
+            if metric_aggregation == "count":
+                query_name = QUERY_BUILDER_NAME.COUNTER_COUNT
+            elif metric_aggregation == "unique":
+                query_name = QUERY_BUILDER_NAME.COUNTER_UNIQUE
+            elif metric_aggregation == "max":
+                query_name = QUERY_BUILDER_NAME.COUNTER_MAX
 
-    elif metric_type == "continuous":
+            run_query(query_name, metric_name, metric_property)
 
-        if metric_aggregation == "max":
-            query_name = QUERY_BUILDER_NAME.CONTINUOUS_MAX
+    # elif metric_type == "continuous":
 
-        bucket_size = QUERY_BUCKET_SIZE.CONTINUOUS
+    #     if metric_aggregation == "max":
+    #         query_name = QUERY_BUILDER_NAME.CONTINUOUS_MAX
 
-    run_query(query_name, metric_name, interval, property)
+    #     run_query(query_name, metric_name, property)
