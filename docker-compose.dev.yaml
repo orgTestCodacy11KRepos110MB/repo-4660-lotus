@@ -13,6 +13,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_preload_libraries=timescaledb"
+      - sh -c "./scripts/start_database.dev.sh"
 
   redpanda:
     image: docker.redpanda.com/vectorized/redpanda:v22.2.2
