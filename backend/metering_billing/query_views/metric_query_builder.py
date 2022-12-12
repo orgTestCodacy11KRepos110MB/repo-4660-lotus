@@ -17,15 +17,20 @@ class QUERY_BUCKET_SIZE:
     CONTINUOUS = ("1 hour", "hour")
 
 
+# Get database connection settings
 DATABASE_SETTINGS = settings["default"]
 
 
-def run_query(query_name, *args):
+def run_query(query_name, file_name, *args):
+
     # Read the queries.properties file
     config = configparser.ConfigParser()
-    config.read("queries.properties")
+    config.read(file_name)
 
-    # Get the SQL query from the queries.properties file
+    policy_config = configparser.ConfigParser()
+    policy_config.read("file_name")
+
+    # Get the SQL query from the file
     sql = config[query_name]
 
     # Connect to the database
@@ -34,8 +39,10 @@ def run_query(query_name, *args):
     )
     cur = conn.cursor()
 
-    # Execute the SQL query with the supplied arguments
+    # Execute the Create View SQL query with the supplied arguments
     cur.execute(sql, args)
+
+    cur.execute()
     conn.commit()
 
 
@@ -46,14 +53,15 @@ def create_view(metric: Metric, interval, property):
 
     metric_type = metric.metric_type
     metric_aggregation = metric.usage_aggregation_type
-    metric_name = metric.billable_metric_name
+    metric_id = metric.metric_id
     metric_property = metric.billable_metric_property
+    file_name = "materialized_view.properties"
 
     if metric_type == "counter":
 
         if metric_aggregation == "sum":
             query_name = QUERY_BUILDER_NAME.COUNTER_SUM
-            run_query(query_name, metric_name)
+            run_query(query_name, file_name, metric_id)
 
         else:
             if metric_aggregation == "count":
@@ -63,7 +71,7 @@ def create_view(metric: Metric, interval, property):
             elif metric_aggregation == "max":
                 query_name = QUERY_BUILDER_NAME.COUNTER_MAX
 
-            run_query(query_name, metric_name, metric_property)
+            run_query(query_name, file_name, metric_id, metric_property)
 
     # elif metric_type == "continuous":
 
@@ -71,3 +79,11 @@ def create_view(metric: Metric, interval, property):
     #         query_name = QUERY_BUILDER_NAME.CONTINUOUS_MAX
 
     #     run_query(query_name, metric_name, property)
+
+
+### Delete view when metric is deleted and no longer a part of any plans
+def delete_view(metric: Metric):
+    metric_id = metric.metric_id
+    file_name = "delete_views.properties"
+
+    run_query("counter_count", file_name, metric_id)
